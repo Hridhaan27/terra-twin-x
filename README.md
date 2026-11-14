@@ -11,7 +11,7 @@ Built for the 2026 NASA Space Apps Challenge.
 5. **Discovery mode**: click *anywhere* on Earth → the app fetches that point's NASA POWER climatology, scores it, and lets you scan a 5×5 region around it for new candidates. You can characterize the point's ground type to complete the score.
 6. **Validation mode**: checks that established analogs outscore obvious non-analog control sites (AUC), for every target × experiment.
 7. **Pictures of every place**: NASA satellite imagery from GIBS (Terra/MODIS true colour + Blue Marble context) and geotagged ground photos from Wikimedia Commons, credited with author and licence.
-8. **"Why this score?" narrated video**: one click builds a ~25-second animated explainer for any site from its own data (photos, the six vectors, NASA POWER climate, the gaps and the field fix), narrated by the browser's built-in text-to-speech voice.
+8. **"Why this score?" narrated video**: one click builds a ~25-second animated explainer for any site from its own data (photos, the six vectors, NASA POWER climate, the gaps and the field fix), narrated by an **ElevenLabs** AI voice (falls back to the browser's voice).
 9. **Exports**: per-site JSON reports and a data snapshot.
 
 ## Run it
@@ -50,6 +50,11 @@ Because no place on Earth is as cold, dry or exposed as the Moon or Mars, climat
 - Geology/terrain/regolith for discovery points are entered by the user.
 - Next steps: per-pixel terrain from SRTM / Copernicus DEM, mineralogy from EMIT, thermal inertia from ECOSTRESS vs THEMIS / Diviner, target climate from the Mars Climate Database, and a 3D rover terrain lab.
 
+## ElevenLabs narration
+1. Open the site → **About** → *Narration voice*, paste your ElevenLabs API key, **Save**. The key is stored only in your browser.
+2. Play **Why this score?** for the sites you want to showcase; each line is generated with ElevenLabs.
+3. Click **Download narration pack**, replace `narration/pack.js` with the downloaded file, commit and push. Every visitor now hears those clips — no key needed. Clips are matched to the exact sentence, so if the data changes the app falls back to live ElevenLabs (if a key is saved) or the browser voice.
+
 ## Tests
 `node test/pam.test.js` checks the scoring engine with hand-made inputs (no network).
 
@@ -64,6 +69,7 @@ js/pam.js             PAM engine, Delta Matrix, protocols, validation
 js/power.js           NASA POWER client + cache
 js/globe.js           canvas globe (no libraries)
 js/media.js           NASA GIBS satellite views + Wikimedia Commons photos
+js/voice.js           ElevenLabs narration (pack → live API → browser voice)
 js/explainer.js       narrated "Why this score?" video (browser speech synthesis)
 js/app.js             UI controller
 data/power_cache.js   optional NASA POWER snapshot

@@ -196,10 +196,17 @@
     <h3>Data</h3>
     <p class="note"><b>NASA POWER</b> climatology API (2001–2020, ~0.5° grid), fetched live: <a href="https://power.larc.nasa.gov" target="_blank" rel="noopener">power.larc.nasa.gov</a>. Planetary reference values are approximate (Mars and Moon gravity and pressure; dose from Curiosity RAD and Chang’e-4 LND). Site geology is a team-compiled catalogue.</p>
     <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" id="reload">Refresh NASA data</button><button class="btn" id="export">Export data snapshot</button></div>
+    <h3>Narration voice</h3>
+    <p class="note">“Why this score?” videos are narrated by an <b>ElevenLabs</b> AI voice. Paste an ElevenLabs API key to generate narration live in this browser — the key stays in this browser only. Then use <i>Download narration pack</i> and commit it as <code>narration/pack.js</code> so every visitor hears the ElevenLabs voice without a key. Without either, the browser's own voice is used.</p>
+    <label class="sel"><span>API key</span><input id="elKey" type="password" placeholder="xi-…" style="background:#0b0909;border:1px solid var(--hair2);border-radius:10px;padding:7px 10px" value="${esc(T.voice.settings().key)}"></label>
+    <label class="sel"><span>Voice ID</span><input id="elVoice" style="background:#0b0909;border:1px solid var(--hair2);border-radius:10px;padding:7px 10px" value="${esc(T.voice.settings().voice)}"></label>
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn" id="elSave">Save</button><button class="btn" id="elPack">Download narration pack (<span id="elN">${T.voice.clipCount()}</span> clips)</button><span class="note" id="elMsg">Now using: ${esc(T.voice.label())}</span></div>
     <h3>Limitations</h3>
     <p class="note">0.5° climate cells smooth out mountains and small craters. Ground type for discovery points is user-entered. Next: SRTM terrain, EMIT mineralogy, ECOSTRESS vs THEMIS/Diviner thermal inertia, Mars Climate Database targets.</p>
     <h3>SI disclosure</h3>
     <p class="note">Code written with assistance from Claude (Anthropic) under the team’s direction. The concept and design decisions are the team’s.</p>`;
+    $('#elSave').onclick = () => { T.voice.save($('#elKey').value, $('#elVoice').value); $('#elMsg').textContent = 'Saved. Now using: ' + T.voice.label(); };
+    $('#elPack').onclick = () => download('pack.js', T.voice.exportPack(), 'text/javascript');
     $('#reload').onclick = () => { T.clearCache(); loadSites(T.SITES); };
     $('#export').onclick = () => download('power_cache.js', T.snapshot(), 'text/javascript');
     $('#mMethod').classList.add('open');

@@ -1,21 +1,10 @@
 /* TERRA TWIN X — "Why this score?" narrated explainer.
  * Builds a short animated video for any site from its own data (scores, NASA POWER climate, Delta Matrix,
- * photos), narrated with the browser's built-in speech synthesis (an AI text-to-speech voice). No server. */
+ * photos), narrated by an ElevenLabs AI voice (see voice.js), falling back to the browser's speech synthesis. */
 (function (root) {
   const TTX = root.TTX = root.TTX || {};
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const col = p => p == null ? '#6F6862' : p >= 70 ? '#FF551A' : p >= 55 ? '#FFB08F' : p >= 40 ? '#38BDF8' : '#1E5671';
-  const synth = root.speechSynthesis;
-  let voice = null;
-  function pickVoice() {
-    if (!synth) return null;
-    const v = synth.getVoices().filter(v => /^en/i.test(v.lang));
-    const pref = [/Natural/i, /Google UK English Female/i, /Google US English/i, /Samantha/i, /Daniel/i, /Microsoft (Aria|Jenny|Guy|Sonia)/i, /Microsoft/i];
-    for (const re of pref) { const f = v.find(x => re.test(x.name)); if (f) return f; }
-    return v[0] || null;
-  }
-  if (synth) { voice = pickVoice(); synth.onvoiceschanged = () => { voice = pickVoice(); }; }
-
   const num = (x, d = 0) => (+x).toFixed(d).replace('-', 'minus ');
   function scenes(site, c) {
     const { target, exp, r, rows, proto, climate: cl, photos, sats } = c;
@@ -56,21 +45,22 @@
     const L = scenes(site, ctx);
     m.innerHTML = `<div class="xp"><div class="xstage">${L.map((s, i) => `<section class="xs" data-i="${i}">${s.html}</section>`).join('')}
       <div class="xcap" id="xcap"></div><div class="xprog">${L.map(() => '<span><i></i></span>').join('')}</div></div>
-      <div class="xctl"><button class="btn" id="xPlay">Pause</button><button class="btn" id="xReplay">Replay</button><button class="btn" id="xMute">${synth ? 'Mute voice' : 'No voice in this browser'}</button>
-      <span class="note" style="margin-left:auto">Narration: your browser's text-to-speech voice${voice ? ' (' + esc(voice.name) + ')' : ''}</span><button class="btn" id="xClose">Close</button></div></div>`;
+      <div class="xctl"><button class="btn" id="xPlay">Pause</button><button class="btn" id="xReplay">Replay</button><button class="btn" id="xMute">${TTX.voice.mode() === 'none' ? 'No voice available' : 'Mute voice'}</button>
+      <span class="note" style="margin-left:auto">Narration: ${esc(TTX.voice.label())}</span><button class="btn" id="xClose">Close</button></div></div>`;
     m.classList.add('open');
-    stop(); state = { L, i: -1, muted: !synth, paused: false, timer: null, t0: 0, m };
+    stop(); state = { L, i: -1, muted: TTX.voice.mode() === 'none', paused: false, timer: null, t0: 0, m };
+    TTX.voice.prefetch(L.map(s => s.say));
     m.querySelector('#xClose').onclick = () => { stop(); m.classList.remove('open'); };
     m.onclick = e => { if (e.target === m) { stop(); m.classList.remove('open'); } };
     m.querySelector('#xReplay').onclick = () => { go(0); };
     m.querySelector('#xPlay').onclick = e => { if (state.paused) { state.paused = false; e.target.textContent = 'Pause'; go(state.i); } else { state.paused = true; e.target.textContent = 'Play'; halt(); } };
-    m.querySelector('#xMute').onclick = e => { if (!synth) return; state.muted = !state.muted; e.target.textContent = state.muted ? 'Unmute voice' : 'Mute voice'; if (state.muted) synth.cancel(); };
+    m.querySelector('#xMute').onclick = e => { if (TTX.voice.mode() === 'none') return; state.muted = !state.muted; e.target.textContent = state.muted ? 'Unmute voice' : 'Mute voice'; if (state.muted) TTX.voice.stop(); };
     go(0);
   };
-  function halt() { if (!state) return; clearTimeout(state.timer); if (synth) synth.cancel(); state.m.querySelectorAll('.xs').forEach(s => s.classList.add('frozen')); }
+  function halt() { if (!state) return; clearTimeout(state.timer); TTX.voice.stop(); state.m.querySelectorAll('.xs').forEach(s => s.classList.add('frozen')); }
   function stop() { if (state) halt(); state = null; }
   function go(i) {
-    const st = state; if (!st) return; clearTimeout(st.timer); if (synth) synth.cancel();
+    const st = state; if (!st) return; clearTimeout(st.timer); TTX.voice.stop();
     if (i >= st.L.length) { st.m.querySelector('#xPlay').textContent = 'Play'; st.paused = true; return; }
     st.i = i; const s = st.L[i];
     st.m.querySelectorAll('.xs').forEach((el, k) => { el.classList.toggle('on', k === i); el.classList.remove('frozen');
@@ -83,10 +73,9 @@
     const next = () => { if (spoken && timed && state === st && !st.paused && st.i === i) go(i + 1); };
     st.timer = setTimeout(() => { timed = true; next(); }, Math.max(s.min || 0, 2.2) * 1000);
     if (!st.muted) {
-      const u = new SpeechSynthesisUtterance(s.say); if (voice) u.voice = voice; u.rate = 1.0; u.pitch = 1.0;
-      const done = () => { spoken = true; setTimeout(next, 450); };
-      u.onend = done; u.onerror = done; synth.speak(u);
-      setTimeout(() => { if (!spoken) done(); }, (est + 6) * 1000);   // safety net if a voice never fires onend
+      const done = () => { if (spoken) return; spoken = true; setTimeout(next, 450); };
+      TTX.voice.speak(s.say).then(done, done);
+      setTimeout(done, (est + 12) * 1000);   // safety net
     } else { setTimeout(() => { spoken = true; next(); }, est * 1000); }
   }
 })(window);
