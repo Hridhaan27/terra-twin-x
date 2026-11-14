@@ -69,7 +69,7 @@
     st.m.querySelector('#xcap').textContent = s.say;
     const words = s.say.split(/\s+/).length, est = Math.max(s.min || 0, words / 2.5 + 0.8);
     const bar = st.m.querySelectorAll('.xprog span')[i].querySelector('i'); bar.style.animationDuration = est + 's';
-    let spoken = st.muted, timed = false;
+    let spoken = false, timed = false;
     const next = () => { if (spoken && timed && state === st && !st.paused && st.i === i) go(i + 1); };
     st.timer = setTimeout(() => { timed = true; next(); }, Math.max(s.min || 0, 2.2) * 1000);
     if (!st.muted) {
