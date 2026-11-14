@@ -10,7 +10,9 @@ Built for the 2026 NASA Space Apps Challenge.
 4. **Site detail**: PAM vector breakdown, **data coverage**, a plain-language "why it matches", the **Environmental Delta Matrix** (where Earth diverges from the target) and a **compensated field protocol** for the chosen experiment.
 5. **Discovery mode**: click *anywhere* on Earth → the app fetches that point's NASA POWER climatology, scores it, and lets you scan a 5×5 region around it for new candidates. You can characterize the point's ground type to complete the score.
 6. **Validation mode**: checks that established analogs outscore obvious non-analog control sites (AUC), for every target × experiment.
-7. **Exports**: per-site JSON reports and a data snapshot.
+7. **Pictures of every place**: NASA satellite imagery from GIBS (Terra/MODIS true colour + Blue Marble context) and geotagged ground photos from Wikimedia Commons, credited with author and licence.
+8. **"Why this score?" narrated video**: one click builds a ~25-second animated explainer for any site from its own data (photos, the six vectors, NASA POWER climate, the gaps and the field fix), narrated by the browser's built-in text-to-speech voice.
+9. **Exports**: per-site JSON reports and a data snapshot.
 
 ## Run it
 No build step, no installs.
@@ -39,6 +41,8 @@ Because no place on Earth is as cold, dry or exposed as the Moon or Mars, climat
 ## Data
 - **NASA POWER** climatology API (2001–2020 means, ~0.5° grid): `https://power.larc.nasa.gov/api/temporal/climatology/point`. Parameters: `T2M, T2M_MAX, T2M_MIN, T2M_RANGE, PRECTOTCORR, RH2M, ALLSKY_SFC_SW_DWN, PS`.
 - Planetary reference values (approximate, used only in the Delta Matrix): Mars and Moon gravity and pressure; surface dose from Curiosity RAD (Mars) and Chang'e-4 LND (Moon).
+- **NASA GIBS** WMS (`gibs.earthdata.nasa.gov`): MODIS Terra corrected-reflectance true colour and Blue Marble Next Generation.
+- **Wikimedia Commons** API: free-licence photos within 10 km of each site, shown with author and licence.
 - Site catalogue (`js/data.js`): descriptive geology, terrain and regolith classes for each site, compiled by the team. **Please review these entries.**
 
 ## Limitations / roadmap
@@ -59,6 +63,8 @@ js/data.js            targets, Earth sites, affinity tables, weights
 js/pam.js             PAM engine, Delta Matrix, protocols, validation
 js/power.js           NASA POWER client + cache
 js/globe.js           canvas globe (no libraries)
+js/media.js           NASA GIBS satellite views + Wikimedia Commons photos
+js/explainer.js       narrated "Why this score?" video (browser speech synthesis)
 js/app.js             UI controller
 data/power_cache.js   optional NASA POWER snapshot
 test/pam.test.js      unit tests

@@ -7,7 +7,7 @@
     'NASA POWER · elevation, ALLSKY_SFC_SW_DWN', 'Site catalogue · regolith, ground ice'];
   const TOP = 8;
 
-  const S = { dest: 'mars', target: T.TARGETS[0], exp: T.EXPERIMENTS[0], w: [...T.EXPERIMENTS[0].w], sel: null, custom: [], cells: [], scanning: false, showAll: false };
+  const S = { dest: 'mars', target: T.TARGETS[0], exp: T.EXPERIMENTS[0], w: [...T.EXPERIMENTS[0].w], sel: null, custom: [], cells: [], scanning: false, showAll: false, photos: {}, dateIdx: 0 };
   const allSites = () => [...T.SITES, ...S.custom];
   const climate = s => T.cachedClimate(s.lat, s.lon);
   const res = s => T.score(s, S.target, climate(s), S.w);
@@ -80,6 +80,8 @@
     <div class="hero"><span class="big" style="color:${scoreCol(r.pam)}">${r.pam ?? '—'}<span style="font-size:24px">%</span></span>
       <span class="note">match to ${esc(S.target.name)}<br>${Math.round(r.coverage * 100)}% data coverage</span></div>
     <p class="why">${esc(T.why(r))}${c ? '' : ` <a href="#" id="fetchOne">Load NASA climate</a>`}</p>
+    <button class="btn primary explainbtn" id="explain">▶ Why this score? <span style="font-weight:400;opacity:.75">· narrated video</span></button>
+    <div class="pics" id="pics"></div><div class="picnote"><span id="picsrc">Loading pictures…</span><button id="otherDate">Clouds? Try another date</button></div>
     ${custom ? `<details open><summary>Describe the ground here</summary><p class="note" style="margin:8px 0 4px">Climate comes from NASA POWER. Add what you know to complete the score.</p>
       ${selBox('lith', T.LITH, 'Rock')}${selBox('terrain', T.TERRAIN, 'Landform')}${selBox('regolith', T.REGOLITH, 'Surface')}
       <label class="sel"><span>Ground ice</span><select data-k="ice"><option value="">Unknown</option><option value="1" ${s.ice === true ? 'selected' : ''}>Yes</option><option value="0" ${s.ice === false ? 'selected' : ''}>No</option></select></label></details>` : ''}
@@ -93,7 +95,23 @@
     ${scan.length ? `<details open><summary>Best cells nearby</summary>${scan.map(x => `<div class="row" data-lat="${x.lat}" data-lon="${x.lon}" style="grid-template-columns:1fr auto"><span>${x.lat.toFixed(1)}°, ${x.lon.toFixed(1)}°</span><span class="score" style="color:${scoreCol(x.score)}">${x.score}</span></div>`).join('')}<p class="note">Climate vectors only — click a cell to analyse it.</p></details>` : ''}
     <div class="links"><button id="dl">Download report</button><a href="${T.powerUrl(s.lat, s.lon)}" target="_blank" rel="noopener">Raw NASA data</a></div>`;
   }
+  function renderPics(s) {
+    const box = $('#pics'); if (!box) return;
+    const sats = T.satViews(s.lat, s.lon, S.dateIdx || 0), ph = S.photos[s.id] || [];
+    const fig = (g, cls) => `<figure class="${cls || ''}"><a href="${esc(g.page || g.url)}" target="_blank" rel="noopener"><img src="${esc(g.url)}" alt="${esc(g.title || g.label)}" loading="lazy" onerror="this.closest('figure').style.display='none'"></a><figcaption>${esc(g.kind === 'sat' ? g.label : g.credit)}</figcaption></figure>`;
+    box.innerHTML = fig(sats[0], 'wide') + ph.slice(0, 4).map(g => fig(g)).join('');
+    $('#picsrc').textContent = S.photos[s.id] ? (ph.length ? `Satellite: NASA GIBS · Photos: Wikimedia Commons (${ph.length})` : 'Satellite: NASA GIBS · no geotagged photos within 10 km') : 'Satellite: NASA GIBS · loading photos…';
+  }
   function bindDetail(s) {
+    renderPics(s);
+    if (!S.photos[s.id]) T.photos(s.lat, s.lon).then(ph => { S.photos[s.id] = ph; if (S.sel === s.id) renderPics(s); });
+    $('#otherDate').onclick = () => { S.dateIdx = (S.dateIdx || 0) + 1; renderPics(s); };
+    $('#explain').onclick = async () => {
+      const ph = S.photos[s.id] || await Promise.race([T.photos(s.lat, s.lon), new Promise(r => setTimeout(() => r([]), 2500))]);
+      const r = res(s), rows = T.delta(s, S.target, climate(s), S.exp.id);
+      T.explain(s, { target: S.target, exp: S.exp, w: S.w, r, rows, proto: [...new Set(rows.filter(x => x.gap !== 'Close' && x.fix).map(x => x.fix))],
+        climate: climate(s), photos: ph, sats: T.satViews(s.lat, s.lon, S.dateIdx || 0) });
+    };
     $('#back').onclick = () => { S.sel = null; earth.selected = null; $('#scan').disabled = true; $('#earthTitle').textContent = 'Click a pin, or anywhere, to analyse'; renderRight(); };
     const f = $('#fetchOne'); if (f) f.onclick = e => { e.preventDefault(); loadSites([s]); };
     document.querySelectorAll('#right select').forEach(sel => sel.onchange = () => {
