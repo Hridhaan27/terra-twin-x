@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TERRA TWIN X — Planetary Analog Intelligence & Discovery Platform</title>
+<meta name="description" content="Find, characterize and validate Earth analogs for Moon and Mars sites using open NASA data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ob:#070606;--carbon:#110F0E;--hair:#221E1B;--hair2:#2E2824;--ink:#F2EDE8;--muted:#A39B94;--dim:#6F6862;--solar:#FF551A;--ice:#38BDF8;--moon:#FFB08F;
+  --sans:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;--disp:'Space Grotesk',Inter,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--ob);color:var(--ink);font-family:var(--sans);font-size:14px}
+button,select,input{font:inherit;color:inherit}a{color:var(--ice)}
+.mono{font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:var(--dim)}
+/* header */
+header{display:flex;align-items:center;gap:28px;padding:0 24px;height:64px;border-bottom:1px solid var(--hair)}
+.brand{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.02em;white-space:nowrap}.brand b{color:var(--solar)}
+.mission{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.seg{display:flex;background:var(--carbon);border:1px solid var(--hair2);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:6px 14px;border-radius:999px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--solar);color:#070606;font-weight:600}
+select{background:var(--carbon);border:1px solid var(--hair2);border-radius:999px;padding:7px 30px 7px 14px;cursor:pointer;appearance:none;max-width:260px;
+  background-image:linear-gradient(45deg,transparent 50%,#6F6862 50%),linear-gradient(135deg,#6F6862 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+.icon{background:none;border:1px solid transparent;color:var(--muted);padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.icon:hover{border-color:var(--hair2);color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block;margin-right:6px;vertical-align:1px}
+.dot.ok{background:#7BD88F}.dot.busy{background:var(--ice);animation:p 1s infinite alternate}@keyframes p{to{opacity:.3}}
+#status{font-size:12px;color:var(--muted);white-space:nowrap}
+/* layout */
+main{display:grid;grid-template-columns:1fr 380px;height:calc(100% - 64px)}
+.stage{position:relative;display:grid;grid-template-columns:1.4fr 1fr;grid-template-rows:minmax(0,1fr);min-width:0}
+.gwrap{position:relative;min-height:0;overflow:hidden}.gwrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.glabel{position:absolute;left:24px;top:20px;pointer-events:none}.glabel b{display:block;font-family:var(--disp);font-size:17px;margin-top:4px;font-weight:500}
+.hint{position:absolute;left:24px;bottom:20px;display:flex;align-items:center;gap:14px;color:var(--dim);font-size:12px}
+.hint .k{display:flex;gap:6px;align-items:center}.hint i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.scanbtn{position:absolute;right:24px;bottom:18px}
+.btn{background:var(--carbon);border:1px solid var(--hair2);border-radius:999px;padding:8px 16px;cursor:pointer}
+.btn:hover{border-color:#4a3f39}.btn.primary{background:var(--solar);border-color:var(--solar);color:#070606;font-weight:600}.btn:disabled{opacity:.4;cursor:default}
+.progress{position:absolute;left:0;right:0;bottom:0;height:2px}.progress div{height:100%;background:var(--ice);width:0;transition:width .2s}
+/* side panel */
+aside{border-left:1px solid var(--hair);overflow:auto;padding:22px 20px}
+h2{font-family:var(--disp);font-size:18px;font-weight:600;margin:0}
+.sub{color:var(--dim);font-size:12px;margin:4px 0 16px}
+.row{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;padding:11px 6px;border-radius:10px;cursor:pointer}
+.row:hover{background:var(--carbon)}
+.row .n{font-family:var(--mono);color:var(--dim);font-size:11px}.row .nm{font-weight:500}.row .rg{font-size:12px;color:var(--dim);margin-top:1px}
+.cand{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--solar);margin-left:6px;vertical-align:2px}
+.score{font-family:var(--mono);font-weight:600;font-size:15px}
+.more{margin:10px 6px;color:var(--muted);background:none;border:0;cursor:pointer;padding:0}.more:hover{color:var(--ink)}
+.back{background:none;border:0;color:var(--muted);cursor:pointer;padding:0;margin-bottom:18px}.back:hover{color:var(--ink)}
+.hero{display:flex;align-items:baseline;gap:10px;margin:14px 0 6px}.big{font-family:var(--disp);font-size:56px;font-weight:700;line-height:1}
+.why{color:#d9d2cb;line-height:1.5;margin:8px 0 22px}
+.vec{display:grid;grid-template-columns:90px 1fr 30px;gap:10px;align-items:center;margin:9px 0;font-size:13px;color:var(--muted)}
+.vec span:last-child{text-align:right;font-family:var(--mono);color:var(--ink);font-size:12px}
+.bar{height:4px;background:#1C1917;border-radius:2px;overflow:hidden}.bar div{height:100%;border-radius:2px}
+details{border-top:1px solid var(--hair);padding:14px 0}details:last-of-type{border-bottom:1px solid var(--hair)}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;font-weight:500}summary::-webkit-details-marker{display:none}
+summary::after{content:'+';color:var(--dim);font-size:16px}details[open] summary::after{content:'–'}
+details > :not(summary){margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}th{font-weight:400;color:var(--dim);text-align:left;padding:6px 4px}td{padding:7px 4px;border-top:1px solid var(--hair);vertical-align:top}
+td.e{color:var(--ice);font-family:var(--mono);font-size:11px}td.t{color:var(--moon);font-family:var(--mono);font-size:11px}
+.g{width:7px;height:7px;border-radius:50%;display:inline-block}.g-Close{background:#7BD88F}.g-Partial{background:var(--moon)}.g-Large{background:var(--solar)}.g-No{background:var(--dim)}
+ol{padding-left:18px;margin:0}ol li{margin:8px 0;color:#d9d2cb;line-height:1.45}
+.sel{display:grid;grid-template-columns:84px 1fr;gap:8px;align-items:center;margin:8px 0;font-size:13px;color:var(--muted)}.sel select{max-width:none;border-radius:10px}
+.note{color:var(--muted);font-size:12px;line-height:1.55}
+.links{display:flex;gap:14px;margin-top:18px;font-size:12px}.links a,.links button{color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+/* popover + modals */
+.pop{position:absolute;top:70px;right:400px;width:300px;background:var(--carbon);border:1px solid var(--hair2);border-radius:16px;padding:18px;z-index:5;display:none;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.pop.open{display:block}
+.w{display:grid;grid-template-columns:90px 1fr 26px;gap:10px;align-items:center;margin:8px 0;font-size:13px;color:var(--muted)}.w input{accent-color:var(--solar);width:100%}.w span:last-child{text-align:right;font-family:var(--mono);color:var(--ink)}
+.modal{position:fixed;inset:0;background:rgba(7,6,6,.88);display:none;align-items:flex-start;justify-content:center;overflow:auto;z-index:10;padding:48px 20px}
+.modal.open{display:flex}.sheet{background:var(--carbon);border:1px solid var(--hair2);border-radius:20px;max-width:880px;width:100%;padding:32px}
+.sheet h3{font-family:var(--disp);font-size:16px;margin:26px 0 8px;font-weight:600}
+.grid{display:grid;grid-template-columns:1.6fr repeat(5,1fr);gap:4px;font-family:var(--mono);font-size:12px}.grid div{padding:8px;border-radius:6px;text-align:center}
+@media (max-width:1100px){main{grid-template-columns:1fr;height:auto}.stage{height:560px}aside{border-left:0;border-top:1px solid var(--hair)}.mission{flex-wrap:wrap}header{height:auto;padding:12px 18px;flex-wrap:wrap}.pop{right:20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">TERRA TWIN <b>X</b></div>
+  <div class="mission">
+    <div class="seg" id="dest"><button data-v="mars" class="on">Mars</button><button data-v="moon">Moon</button></div>
+    <select id="target" aria-label="Target site"></select>
+    <select id="exp" aria-label="Experiment type"></select>
+    <button class="icon" id="btnWeights">Weights</button>
+  </div>
+  <button class="icon" id="btnValidate">Validation</button>
+  <button class="icon" id="btnMethod">About</button>
+  <span id="status"><span class="dot" id="dot"></span><span id="statusText">NASA data</span></span>
+</header>
+<main>
+  <section class="stage">
+    <div class="gwrap"><canvas id="earth"></canvas>
+      <div class="glabel"><span class="mono" style="color:var(--ice)">Earth</span><b id="earthTitle">Click a pin, or anywhere, to analyse</b></div>
+      <div class="hint"><span class="k"><i style="background:#FF551A"></i>Strong match</span><span class="k"><i style="background:#38BDF8"></i>Weaker</span><span class="k"><i style="border:1.5px solid #F2EDE8"></i>New candidate</span></div>
+      <button class="btn scanbtn" id="scan" disabled title="Fetch NASA climate for a 5×5 grid around the selected point">Scan region</button>
+    </div>
+    <div class="gwrap"><canvas id="planet"></canvas>
+      <div class="glabel"><span class="mono" style="color:var(--solar)" id="planetLabel">Mars</span><b id="planetTitle"></b></div>
+    </div>
+    <div class="progress"><div id="prog"></div></div>
+    <div class="pop" id="weights"></div>
+  </section>
+  <aside id="right"></aside>
+</main>
+<div class="modal" id="mValidate"><div class="sheet" id="validateBody"></div></div>
+<div class="modal" id="mMethod"><div class="sheet" id="methodBody"></div></div>
+
+<script src="data/power_cache.js"></script>
+<script src="js/data.js"></script>
+<script src="js/pam.js"></script>
+<script src="js/power.js"></script>
+<script src="js/globe.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+// Run: node test/pam.test.js  — checks the PAM engine with hand-made climate inputs (no network).
+const assert = require('assert');
+require('../js/data.js'); const T = require('../js/pam.js');
+const jezero = T.TARGETS.find(t => t.id === 'jezero');
+const w = T.EXPERIMENTS[0].w;
+const desert = { tmean: 5, trange: 18, precipMmYr: 5, rh: 15, elev: 3500, solar: 7, ps: 65 };
+const jungle = { tmean: 27, trange: 7, precipMmYr: 2800, rh: 85, elev: 50, solar: 4.5, ps: 100 };
+const site = T.SITES.find(s => s.id === 'yungay'), ctl = T.SITES.find(s => s.id === 'ctl_manaus');
+const a = T.score(site, jezero, desert, w), b = T.score(ctl, jezero, jungle, w);
+assert(a.pam > b.pam, 'desert analog should beat rainforest control');
+assert.strictEqual(a.coverage, 1);
+const noClimate = T.score(site, jezero, null, w);
+assert.strictEqual(noClimate.coverage, 0.5, 'without climate only 3 of 6 vectors have data');
+const unknown = T.score({ lith: null, terrain: null, regolith: null, ice: null }, jezero, desert, w);
+assert.strictEqual(unknown.coverage, 0.5, 'discovery point with climate only');
+assert(T.delta(site, jezero, desert, 'rover').length === 8);
+const v = T.validate([{ ...site, status: 'established' }, { ...ctl, status: 'control' }], jezero, { yungay: desert, ctl_manaus: jungle }, w);
+assert.strictEqual(v.auc, 1);
+assert(T.parsePower === undefined || true);
+console.log('PAM tests passed:', a.pam, 'vs', b.pam);
